@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <style type="text/css">
+
+            .center-in-center{   
+                position: absolute;   
+                text-align: center;
+
+                top: 20%;   
+                left: 30%;   
+                
+            } 
+
+        </style>
+    </head>
+    
+    <body>
+        <script type="text/javascript">
+            var html_text = "";
+            var isEmpty = false;
+            var jsonObj;
+
+            function viewJSON(form) {
+                const url = form.URL.value;
+                if (url == null || url == "") {
+                    alert("The Container Shipping Companies List JSON File Name cannot be empty.");
+                    return;
+                }
+                isEmpty = false;
+
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.open("GET", url, false);
+                xmlhttp.overrideMimeType("application/json");
+                try {
+                    xmlhttp.send();
+                    if (xmlhttp.readyState==4 && xmlhttp.status!=200) {
+                        alert("The Container Shipping Companies List File is not exist.");
+                        return;
+                    }
+                }
+                catch (exception) {
+                    if(exception.name == "NetworkError") {
+                        alert("The Container Shipping Companies List File is not exist.");
+                        return;
+                    }
+                }
+
+                var jsonDoc = xmlhttp.responseText;
+                if (jsonDoc == null || jsonDoc.length == 0) {
+                    alert("The Container Shipping Companies List JSON File is empty.");
+                    return;
+                }
+                try {
+                    jsonObj = JSON.parse(jsonDoc);
+                }
+                catch (exception) {
+                    alert(exception);
+                }
+
+                if (jsonObj != null) {
+                    jsonObj.onload = generateHTML(jsonObj);
+                    if (isEmpty) {
+                        return;
+                    }
+                    if (jsonObj.onload == 404){
+                        return;
+                    }
+                    html_win = window.open("", "", "height=1024, width=968");
+                    html_win.document.write(html_text);
+                    html_win.document.close();
+                }
+            }
+
+
+
+
+            function generateHTML(jsonObj) {
+                html_text = "<html><head><title>Top Container Shipping Companies Companies</title></head><body>";
+                html_text += "<table border='1'>"; 
+                const headers = jsonObj.Mainline.Table.Header.Data;
+                const contents = jsonObj.Mainline.Table.Row;
+
+                html_text += "<tr>"; 
+
+                if (headers.length != 6) {
+                    alert("Header info is not compelte, does not exist");
+                    return 404;
+                }
+
+                for (var i = 0; i < headers.length; ++i) {
+                    html_text += "<th>" + headers[i] + "</th>";
+                }
+                html_text += "</tr>";
+                if (jsonObj.Mainline.Table.Row == null) {
+                    alert("The Container Shipping Companies List JSON File is empty.");
+                    isEmpty = true;
+                    return;
+                }
+                for (var i = 0; i < contents.length; ++i) {
+                    html_text += "<tr>";
+                    var shipping_keys = Object.keys(contents[i]);
+                    for (var j = 0; j < shipping_keys.length; ++j) {
+                        html_text += "<td>";
+                        var content = contents[i][shipping_keys[j]];
+                        if (content == null) {
+                            html_text += "</td>"
+                            continue;
+                        }
+                        if (shipping_keys[j] == "Hubs") {
+                            if (content.Hub.length == 0) {
+                                html_text += "</td>"
+                                continue;
+                            }
+                            content = content.Hub;
+                            for (var k = 0; k < content.length; ++k) {
+                                if (content[k] == null) {
+                                    content[k] = "";
+                                }
+                            }
+                            html_text += "<ul>";
+                            html_text += "<li><b>" + content[0] + "</b></li>";
+                            for (var k = 1; k < content.length; ++k) {
+                                html_text += "<li>" + content[k] + "</li>";
+                            }
+                            html_text += "</ul>";
+                        }
+                        else if (shipping_keys[j] == "HomePage") {
+                            html_text += "<a href='" + content + "' >" + content + "</a>"
+                        }
+                        else if (shipping_keys[j] == "Logo") {
+                            html_text += "<img src='" + content + "' width=300>"
+                        }
+                        else {
+                            html_text += content;
+                        }
+                        html_text += "</td>";
+                    }
+                    html_text += "</tr>";
+                }
+                html_text += "</table>";
+                html_text += "</body></html>";
+            }   
+
+
+            function check(headers, i){
+                if (i == 0 && headers[i] != "Company"){
+                    return true;
+                }
+                if (i == 1 && headers[i] != "Number of Ships"){
+                    return true;
+                }
+                if (i == 2 && headers[i] != "HQ \/ Info"){
+                    return true;
+                }
+                if (i == 3 && headers[i] != "Market share"){
+                    return true;
+                }
+                if (i == 4 && headers[i] != "HomePage"){
+                    return true;
+                }
+                if (i == 5 && headers[i] != "Logo"){
+                    return true;
+                }
+                return false
+            }
+
+            </script>
+
+
+        <div class="center-in-center">
+        <h3> Enter URL for Container Shipping Companies List JSON File </h3>
+        <form name="myform" method="POST">
+            <input type="text" name="URL" value="containerlist.json" />
+            <br />
+            <br />
+            <input type="button" name="submit" value="Submit Query" onClick="viewJSON(this.form)" />
+        </form>
+        </div>
+
+
+
+
+    </body>
+</html>
